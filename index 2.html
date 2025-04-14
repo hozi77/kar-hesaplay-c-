@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Kar Hesaplayıcı">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>1. Sezon Kar Hesaplayıcı</title>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.6rem;
+      color: #333;
+    }
+
+    label {
+      margin-top: 15px;
+      display: block;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 14px;
+      font-size: 1.1rem;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .results {
+      margin-top: 30px;
+      background: #e9ffe9;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #c0e7c0;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 15px;
+      }
+      input, button {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>1. Sezon Kar Hesaplayıcı</h2>
+
+    <label>Sezonluk Bilet Satış Beklentisi (kişi):</label>
+    <input type="number" id="bilet" value="">
+
+    <label>Merch Satın Alacak Kitle (%):</label>
+    <input type="number" id="merchOrani" value="">
+
+    <label>Kişi Başı Sepet Tutarı (₺):</label>
+    <input type="number" id="sepetTutari" value="">
+
+    <label>Alan Ciro Bedeli (%):</label>
+    <input type="number" id="ciroBedeli" value="">
+
+    <label>Ürün Maliyeti (₺):</label>
+    <input type="number" id="urunMaliyeti" value="">
+
+    <label>Personel Sayısı:</label>
+    <input type="number" id="personelSayisi" value="">
+
+    <button onclick="hesapla()">Hesapla</button>
+
+    <div class="results" id="sonuclar">
+      <strong>Sonuçlar burada görünecek.</strong>
+    </div>
+  </div>
+
+  <script>
+    function gelirVergisiHesapla(matrah) {
+      let vergi = 0;
+      if (matrah <= 158000) {
+        vergi = matrah * 0.15;
+      } else if (matrah <= 330000) {
+        vergi = 23700 + (matrah - 158000) * 0.20;
+      } else if (matrah <= 800000) {
+        vergi = 58100 + (matrah - 330000) * 0.27;
+      } else if (matrah <= 4300000) {
+        vergi = 185000 + (matrah - 800000) * 0.35;
+      } else {
+        vergi = 1410000 + (matrah - 4300000) * 0.40;
+      }
+      return vergi;
+    }
+
+    function formatTL(sayi) {
+      return sayi.toLocaleString("tr-TR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + " ₺";
+    }
+
+    function hesapla() {
+      let bilet = parseFloat(document.getElementById("bilet").value);
+      let merchOrani = parseFloat(document.getElementById("merchOrani").value) / 100;
+      let sepet = parseFloat(document.getElementById("sepetTutari").value);
+      let ciroBedeli = parseFloat(document.getElementById("ciroBedeli").value) / 100;
+      let urunMaliyet = parseFloat(document.getElementById("urunMaliyeti").value);
+      let personelSayisi = parseFloat(document.getElementById("personelSayisi").value);
+
+      if (
+        isNaN(bilet) || isNaN(merchOrani) || isNaN(sepet) || isNaN(ciroBedeli) ||
+        isNaN(urunMaliyet) || isNaN(personelSayisi)
+      ) {
+        alert("Lütfen tüm alanları eksiksiz ve geçerli şekilde doldurun.");
+        return;
+      }
+
+      let personel = personelSayisi * 5 * 100000;
+      let satisAdedi = bilet * merchOrani;
+      let toplamGelir = satisAdedi * sepet;
+      let lisans = toplamGelir * 0.10;
+      let ciro = toplamGelir * ciroBedeli;
+      let toplamKomisyon = lisans + ciro;
+      let brutKar = toplamGelir - toplamKomisyon;
+      let toplamUrunMaliyeti = satisAdedi * urunMaliyet;
+      let araToplam = brutKar - toplamUrunMaliyeti;
+
+      let kdv = araToplam - (araToplam / 1.20);
+      let gvMatrah = araToplam - kdv;
+      let gv = gelirVergisiHesapla(gvMatrah);
+      let toplamVergi = kdv + gv;
+      let netKar = araToplam - toplamVergi - personel;
+
+      document.getElementById("sonuclar").innerHTML = `
+        <strong>Toplam Gelir:</strong> ${formatTL(toplamGelir)}<br>
+        <strong>Toplam Komisyon:</strong> ${formatTL(toplamKomisyon)}<br>
+        <strong>Brüt Kar:</strong> ${formatTL(brutKar)}<br>
+        <strong>Ürün Maliyeti:</strong> ${formatTL(toplamUrunMaliyeti)}<br>
+        <strong>Ara Toplam:</strong> ${formatTL(araToplam)}<br>
+        <strong>KDV:</strong> ${formatTL(kdv)}<br>
+        <strong>Gelir Vergisi (tahmini):</strong> ${formatTL(gv)}<br>
+        <strong>Toplam Vergi:</strong> ${formatTL(toplamVergi)}<br>
+        <strong>Personel Sayısı x 5 x 100.000:</strong> ${formatTL(personel)}<br>
+        <h3>➡ 1. Sezon Net Kar: ${formatTL(netKar)}</h3>
+      `;
+    }
+  </script>
+
+</body>
+</html>
